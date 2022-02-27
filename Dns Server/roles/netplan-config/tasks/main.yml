@@ -1,0 +1,78 @@
+---
+- name: "Check netcfg is exist"
+  ansible.builtin.stat:
+    path: /etc/netplan/00-installer-config.yaml
+  register: st
+
+- name: Fail if the file does not exists
+  ansible.builtin.fail:
+    msg: "Whoops! file is not exists!"
+  when: not st.stat.exists
+
+- name: "Update netplan file to set static ip"
+  become: yes
+  ansible.builtin.template:
+    src: "00-installer-config.yaml.j2"
+    dest: /etc/netplan/00-installer-config.yaml
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  notify: apply netplan
+
+- name: "Change HostName to {{ inventory_hostname }}"
+  become: yes
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: "Update /etc/hosts file to set correct hostname"
+  become: yes
+  ansible.builtin.template:
+    src: "hosts.j2"
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+
+- name: "install packages"
+  become: yes
+  apt:
+    pkg:
+      - resolvconf
+    state: "present"
+  tags: ['config-dns-server-address']
+
+- name: "Update /etc/resolvconf/resolv.conf.d/head file to set correct dns_servers"
+  become: yes
+  ansible.builtin.template:
+    src: "resolve-conf-head.j2"
+    dest: /etc/resolvconf/resolv.conf.d/head
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  tags: ['config-dns-server-address']
+
+- name: "Active resolvconf service"
+  become: yes
+  ansible.builtin.service:
+    name: resolvconf
+    state: restarted
+    enabled: yes
+  tags: ['config-dns-server-address']
+
+- name: "Restart systemd-resolved service"
+  become: yes
+  ansible.builtin.service:
+    name: systemd-resolved
+    state: restarted
+  tags: ['config-dns-server-address']
+
+- name: "Update resolv.conf file"
+  become: yes
+  command: "{{ item }}"
+  with_items:
+    - "resolvconf --enable-updates"
+    - "resolvconf -u"
+  tags: ['config-dns-server-address']

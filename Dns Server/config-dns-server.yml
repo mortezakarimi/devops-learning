@@ -1,0 +1,67 @@
+---
+- hosts: dnsservers
+  vars: 
+    cache_nameservers:
+      - 8.8.8.8
+      - 8.8.4.4
+
+    primary_nameserver: "example.local"
+    dns_records:
+      - name: "{{ primary_nameserver }}."
+        type: MX
+        INOUT: "IN"
+        ttl: 10
+        content: "mail.{{ primary_nameserver }}."
+
+      - name: "dns1"
+        type: A
+        INOUT: "IN"
+        content: "{{ ansible_default_ipv4.address }}"
+
+      - name: "server2"
+        type: A
+        INOUT: "IN"
+        content: "192.168.190.133"
+
+      - name: "server3"
+        type: A
+        INOUT: "IN"
+        content: "192.168.190.134"
+
+      - name: "ansible"
+        type: A
+        INOUT: "IN"
+        content: "192.168.190.135"
+
+      - name: "gitlab"
+        type: A
+        INOUT: "IN"
+        content: "192.168.190.136"
+
+    ptr_records:
+      - name: "132"
+        type: PTR
+        INOUT: "IN"
+        content: "dns1.{{ primary_nameserver }}"
+
+      - name: "133"
+        type: PTR
+        INOUT: "IN"
+        content: "server2.{{ primary_nameserver }}"
+
+      - name: "134"
+        type: PTR
+        INOUT: "IN"
+        content: "server3.{{ primary_nameserver }}"
+
+      - name: "135"
+        type: PTR
+        INOUT: "IN"
+        content: "ansible.{{ primary_nameserver }}"
+
+      - name: "136"
+        type: PTR
+        INOUT: "IN"
+        content: "gitlab.{{ primary_nameserver }}"
+  roles:
+    - dns-server-config

@@ -1,0 +1,9 @@
+---
+- name: "restart bind9"
+  become: yes
+  ansible.builtin.service: 
+    name: bind9
+    state: restarted
+    enabled: yes
+  async: 45
+  poll: 0

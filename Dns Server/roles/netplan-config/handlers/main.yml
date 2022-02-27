@@ -1,0 +1,6 @@
+---
+- name: "apply netplan"
+  become: yes
+  ansible.builtin.shell: "netplan apply"
+  async: 45
+  poll: 0

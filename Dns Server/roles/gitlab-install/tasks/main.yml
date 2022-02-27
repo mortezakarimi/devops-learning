@@ -1,0 +1,41 @@
+---
+- name: "apt-get update"
+  become: yes
+  apt:
+    update_cache: yes
+
+- name: "Install needed packages"
+  become: yes
+  apt:
+    pkg: 
+      - curl 
+      - openssh-server
+      - ca-certificates 
+      - tzdata
+      - perl
+      - postfix
+      
+- name: "Load installation script form gitlab"
+  become: yes
+  ansible.builtin.get_url:
+    url: "https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh"
+    dest: /tmp/script.deb.sh
+    mode: 0755
+
+- name: Execute gitlab installation script 
+  become: yes
+  command: 
+    cmd: /tmp/script.deb.sh
+    creates: /etc/apt/sources.list.d/gitlab_gitlab-ee.list
+  register: install_result
+  failed_when: 
+  - install_result.rc != 0
+  - "'The repository is setup! You can now install packages.' not in install_result.stdout"
+
+
+- name: "Install gitlab-ee"
+  become: yes
+  apt:
+    name: "gitlab-ee"
+  environment:
+    EXTERNAL_URL: http://gitlab.example.local

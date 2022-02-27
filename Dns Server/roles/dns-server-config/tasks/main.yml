@@ -1,0 +1,66 @@
+---
+- name: "apt-get update"
+  become: yes
+  apt:
+    update_cache: yes
+
+- name: "update server packages"
+  become: yes
+  apt:
+    pkg:
+      - bind9
+    state: present
+
+- name: "Calculate net mask"
+  set_fact:
+    net_mask: "{{ ansible_default_ipv4.network }}/{{ ansible_default_ipv4.netmask }}"
+  tags: ["test"]
+
+- name: "Update /etc/bind/named.conf.options file to set cache nameservers"
+  become: yes
+  ansible.builtin.template:
+    src: "named.conf.options.j2"
+    dest: /etc/bind/named.conf.options
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  notify: restart bind9
+
+- name: "Calculate net mask"
+  set_fact:
+    net_mask: "{{ ansible_default_ipv4.network }}/{{ ansible_default_ipv4.netmask }}"
+  tags: ["test"]
+
+- name: "Configure Primary/Master Nameserver"
+  become: yes
+  ansible.builtin.template:
+    src: "named.conf.local.j2"
+    dest: /etc/bind/named.conf.local
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  notify: restart bind9
+
+- name: "Build the Forward Resolution for Primary/Master NameServer"
+  become: yes
+  ansible.builtin.template:
+    src: "db.local.j2"
+    dest: /etc/bind/db.{{ primary_nameserver }}
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  notify: restart bind9
+
+- name: "Build the Reverse Resolution for Primary/Master NameServer"
+  become: yes
+  ansible.builtin.template:
+    src: "db.127.j2"
+    dest: /etc/bind/db.192
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  notify: restart bind9

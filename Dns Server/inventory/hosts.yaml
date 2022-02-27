@@ -1,0 +1,34 @@
+all:
+  hosts:
+  children:
+    gitlabservers:
+      hosts:
+        gitlab.example.local:
+          ansible_connection: ssh
+          ansible_user: server1
+          ansible_become_password: 123456
+    ansibleservers:
+      hosts:
+        ansible.example.local:
+          ansible_connection: ssh
+          ansible_user: server1
+          ansible_become_password: 123456
+
+    generalservers:
+      hosts:
+        server2.example.local:
+          ansible_connection: ssh
+          ansible_user: server1
+          ansible_become_password: 123456
+
+        server3.example.local:
+          ansible_connection: ssh
+          ansible_user: server1
+          ansible_become_password: 123456
+
+    dnsservers:
+      hosts:
+        dns1.example.local:
+          ansible_connection: ssh
+          ansible_user: server1
+          ansible_become_password: 123456

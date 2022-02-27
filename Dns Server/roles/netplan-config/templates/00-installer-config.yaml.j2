@@ -1,0 +1,12 @@
+# This is the network config written by 'subiquity'
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    {{ansible_default_ipv4.interface}}:
+      dhcp4: no
+      addresses:
+        - {{ansible_default_ipv4.address}}/24
+      gateway4: {{ansible_default_ipv4.gateway}}
+      nameservers:
+          addresses: [8.8.8.8, 1.1.1.1]
